@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang='en-GB'>
+
+<head>
+    <meta charset="utf-8">
+    <title>Assignment 2: JavaScript</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: beige;
+        }
+
+        table {
+            background-color: cornflowerblue;
+            margin: 0 auto;
+        }
+
+        td {
+            border: 1px solid black;
+            width: 1.8em;
+            height: 1.8em;
+            margin: 0em;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+
+        td.YellowCell {
+            color: yellow;
+        }
+
+        td.RedCell {
+            color: red;
+        }
+
+
+        td.GreenCell {
+            color: lime;
+        }
+
+        td.BlackCell {
+            color: black;
+        }
+
+        td.BlueCell {
+            color: blue;
+        }
+
+        div.RedFont {
+            color: red;
+        }
+
+        div.GreenFont {
+            color: green;
+        }
+
+        div.OrangeFont {
+            color: orange;
+        }
+
+        div.WhiteFont {
+            color: white;
+        }
+
+        div.BlackFont {
+            color: black
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Grid Submarine Game</h1>
+    <h2 id="gameStageHeader">Setup Stage</h2>
+    <div id="txtAboveGrid">
+        Please click on a cell and either enter:<br>
+        The letter "u" to place your Submarine<br>
+        The letter "o" to place an Obstacle<br>
+        A number between 5-9 to place the Fuel<br>
+        The letter "k" to place the Robotic Killer Submarine<br>
+    </div>
+    <br>
+    <table id="gridTable"></table>
+    <br>
+    <button id="startBtn" onclick="startGame()">End Setup</button>
+    <button id="moveBtn" onclick="play()">Move Submarine</button>
+    <button id="endBtn" onclick="endGame()">End game</button>
+    <div id="results"></div>
+    <script src="game.js"></script>
+</body>
+
+</html>
