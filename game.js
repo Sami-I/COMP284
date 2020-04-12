@@ -11,8 +11,16 @@ var grid =
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
+// Variables for the HTML elements
+var table = document.getElementById("gridTable")
+var gameStageHeader = document.getElementById("gameStageHeader")
+var startButton = document.getElementById("startBtn")
+var moveButton = document.getElementById("moveBtn")
+var endButton = document.getElementById("endBtn")
+var restartButton = document.getElementById("restartBtn")
+
+
 // Variables for the game
-table = document.getElementById("gridTable")
 var round = 0
 var subFuel = 10
 var totalFuels = 0
@@ -23,19 +31,20 @@ var validSetupInput = "56789uokUOK"
 var validPlayInput = "awdxAWDX"
 var userSubExists = false
 var gameStage = "setup"
-// Variables to store the co-ordinates of the user's submarine's current location
+// Variables to store the co-ordinates of the user submarine's current location
 var subX = 0
 var subY = 0
-// Array to store the killers subs position on the grid
+// Array to store the killer subs positions
 var killerSubs = []
-
+// Array of directions to move a killer sub
+var directions = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]
 
 /**
 * Clears text from a HTML text element from the page
 * @param id id of the HTML element
 */
 function clearMessage(id) {
-    m1 = document.getElementById(id);
+    var m1 = document.getElementById(id);
     m1.style.display = "none";
 }
 /**
@@ -45,7 +54,7 @@ function clearMessage(id) {
 * @param style the style e.g colour of the message
 */
 function showMessage(id, message, style) {
-    m1 = document.getElementById(id);
+    var m1 = document.getElementById(id);
     m1.innerHTML = message;
     m1.style.display = "block";
     m1.className = style;
@@ -65,7 +74,7 @@ function setUpGrid(x, y, event) {
     }
     else {
         // Prompt the user for input to insert into the grid
-        cellInput = prompt("Enter a value to place an object on the cell  [" + x + "," + y + "] ")
+        var cellInput = prompt("Enter a value to place an object on the cell  [" + x + "," + y + "] ")
         // When the user clicks the cancel button on the prompt -> no action
         if (cellInput === null) {
         }
@@ -113,6 +122,7 @@ function setUpGrid(x, y, event) {
         }
     }
 }
+
 // Starts the game, called when user clicks the end setup button
 function startGame() {
     if (!userSubExists) {
@@ -123,22 +133,70 @@ function startGame() {
     }
     else {
         round++
-        // Change the stage of the game to play
         gameStage = "play"
         // Make some adjustments to the page for the play stage of the game
-        gameStageHeader = document.getElementById("gameStageHeader")
         gameStageHeader.innerHTML = "Play stage"
         clearMessage("txtAboveGrid")
         showMessage("txtAboveGrid", "Please click on the move button and enter:<br> A direction (W,A,D,X) to move your submarine", "BlackFont")
         showMessage("results", "Round: " + round + "<br> Submarine fuel: " + subFuel + "<br> User score: " + playerScore + "<br> Computer score: " + computerScore, "BlackFont")
-        document.getElementById("startBtn").style.visibility = "hidden";
-        document.getElementById("moveBtn").style.visibility = "visible";
-        document.getElementById("endBtn").style.visibility = "visible";
+        startButton.style.visibility = "hidden";
+        moveButton.style.visibility = "visible";
+        endButton.style.visibility = "visible";
     }
 }
 
+// End stage of the game
+function endGame() {
+    gameStage = "end"
+
+    // Make some changes to the webpage for the end stage
+    gameStageHeader.innerHTML = "Game Over!"
+    startButton.style.visibility = "hidden"
+    moveButton.style.visibility = "hidden"
+    endButton.style.visibility = "hidden"
+    restartBtn.style.visibility = "visible"
+
+    clearMessage("txtAboveGrid")
+
+    // Determine winner
+    if (totalKillers == 0 && totalFuels == 0) {
+        showMessage("txtAboveGrid", "No killer submarines and fuel placed!", "RedFont")
+    }
+    else if (totalKillers == 0) {
+        showMessage("txtAboveGrid", "No killer submarines placed!", "RedFont")
+    }
+    else if (totalFuels == 0 && subFuel == 10) {
+        showMessage("txtAboveGrid", "No fuel placed!", "RedFont")
+    }
+    else if ((totalKillers == 0 || totalFuels == 0) && playerScore > computerScore) {
+        showMessage("txtAboveGrid", "User wins!<br> User's score: " + playerScore + "<br> Computer's score: " + computerScore, "GreenFont")
+
+    }
+    else if (totalFuels == 0 && computerScore > playerScore) {
+        showMessage("txtAboveGrid", "Computer wins!<br> User's score: " + playerScore + "<br> Computer's score: " + computerScore, "RedFont")
+    }
+    else if (!userSubExists) {
+        showMessage("txtAboveGrid", "Computer wins!<br> User's submarine has been destroyed!", "RedFont")
+
+    }
+    else {
+        showMessage("txtAboveGrid", "Game is a draw!<br> User's score: " + playerScore + "<br> Computer's score: " + computerScore, "OrangeFont")
+    }
+
+    if (round != 0) {
+        round--
+    }
+    showMessage("results", "Round: " + round + "<br> Submarine fuel: " + subFuel + "<br> User's score: " + playerScore + "<br> Computer's score: " + computerScore, "BlackFont")
+
+}
+
+// Restart the game by reloading the webpage
+function restart() {
+    window.location.reload();
+}
+
 /**
-* Clears a submarine from the grid and the table on HTML page
+* Clears a submarine from the grid and the table on the HTML page
 * @param x X co-ordinate of the submarine to remove
 * @param y Y co-ordinate of the submarine to remove
 */
@@ -165,7 +223,7 @@ function hitsObstacle(x, y) {
 }
 
 /**
-* Checks if a submarine hits a fuel
+* Checks if a submarine hits a fuel cell
 * @param x X co-ordinate of the cell the submarine attempts to move to
 * @param y Y co-ordinate of the cell the submarine attempts to move to
 * @return true if fuel is in that position on the grid, false otherwise
@@ -198,7 +256,7 @@ function outsideGrid(x, y) {
 }
 
 /**
-* Checks if a killer submarine hits another killer submarine
+* Checks if a submarine hits a killer submarine
 * @param x X co-ordinate of the cell the submarine attempts to move to
 * @param y Y co-ordinate of the cell the submarine attempts to move to
 * @return true if a killer submarine is in that position on the grid, false otherwise
@@ -237,11 +295,12 @@ function hitsUserSub(x, y) {
 * @param y Y co-ordinate of the cell to move to
 */
 function moveUserSub(x, y) {
-    // Remove the users sub from its current location
+    // Remove the users submarine from its current location
     clearSub(subX, subY)
+    subFuel--
     if (hitsFuelCell(x, y)) {
         totalFuels--
-        fuelCell = parseInt(grid[y][x])
+        var fuelCell = parseInt(grid[y][x])
         subFuel += fuelCell
         playerScore += fuelCell
     }
@@ -253,12 +312,12 @@ function moveUserSub(x, y) {
         table.rows[y].cells[x].className = "BlueCell"
         table.rows[y].cells[x].innerHTML = "U"
     }
-    subFuel--
 }
 
 /**
 * Attempts to moves the users submarine
 * @param direction direction entered by user to move the submarine
+* @return true if the submarine can move in the specified direction, false otherwise
 */
 function attemptMoveUserSub(direction) {
     switch (direction) {
@@ -342,15 +401,14 @@ function attemptMoveUserSub(direction) {
 * @param y Y co-ordinate of killer submarine
 */
 function moveNearUserSub(x, y, killerSubPosition) {
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            if (i == 0 && j == 0) {
-                continue
-            }
-            if (!outsideGrid(x + i, y + j) && !hitsObstacle(x + i, y + j) && hitsUserSub(x + i, y + j)) {
-                moveKillerSub(x + i, y + j, killerSubPosition)
-                return true
-            }
+    // Loop through every direction a killer sub can move and see if that leads it to the users submarine
+    for (let i = 0; i < directions.length; i++) {
+        var direction = directions[i]
+        var newX = x + direction[0]
+        var newY = y + direction[1]
+        if (!outsideGrid(newX, newY) && !hitsObstacle(newX, newY) && hitsUserSub(newX, newY)) {
+            moveKillerSub(newX, newY, killerSubPosition)
+            return true
         }
     }
 
@@ -364,18 +422,16 @@ function moveNearUserSub(x, y, killerSubPosition) {
 * @param y Y co-ordinate of killer submarine
 */
 function moveNearFuel(x, y, killerSubPosition) {
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            if (i == 0 && j == 0) {
-                continue
-            }
-            if (!outsideGrid(x + i, y + j) && !hitsObstacle(x + i, y + j) && hitsFuelCell(x + i, y + j)) {
-                moveKillerSub(x + i, y + j, killerSubPosition)
-                return true
-            }
+    // Loop through every direction a killer sub can move and see if that leads it to a fuel cell
+    for (let i = 0; i < directions.length; i++) {
+        var direction = directions[i]
+        var newX = x + direction[0]
+        var newY = y + direction[1]
+        if (!outsideGrid(newX, newY) && !hitsObstacle(newX, newY) && hitsFuelCell(newX, newY)) {
+            moveKillerSub(newX, newY, killerSubPosition)
+            return true
         }
     }
-
     return false
 }
 
@@ -385,15 +441,14 @@ function moveNearFuel(x, y, killerSubPosition) {
 * @param y Y co-ordinate of killer submarine
 */
 function trapped(x, y) {
-    freeCells = 0
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            if (i == 0 && j == 0) {
-                continue
-            }
-            if (outsideGrid(x + i, y + j) || (!outsideGrid(x + i, y + j) && hitsObstacle(x + i, y + j)) || hitsKillerSub(x + i, y + j)) {
-                freeCells++
-            }
+    var freeCells = 0
+    // Loop through every direction a killer sub can move and see if it can move into that cell
+    for (let i = 0; i < directions.length; i++) {
+        var direction = directions[i]
+        var newX = x + direction[0]
+        var newY = y + direction[1]
+        if (outsideGrid(newX, newY) || (!outsideGrid(newX, newY) && hitsObstacle(newX, newY)) || hitsKillerSub(newX, newY)) {
+            freeCells++
         }
     }
     console.log(freeCells)
@@ -414,13 +469,13 @@ function trapped(x, y) {
 */
 function moveKillerSub(x, y, i) {
     // Get position of the killer sub
-    killerSub = killerSubs[i]
+    var killerSub = killerSubs[i]
     // Remove the killer sub from the grid and table
     clearSub(killerSub[0], killerSub[1])
 
     if (hitsFuelCell(x, y)) {
         totalFuels--
-        fuelCell = parseInt(grid[y][x])
+        var fuelCell = parseInt(grid[y][x])
         computerScore += fuelCell
     }
     if (hitsUserSub(x, y)) {
@@ -437,38 +492,36 @@ function moveKillerSub(x, y, i) {
 
 /**
 * Attempts to moves the kiler submarine
-* @param i index of the killer submarine to move in the killer submarines array
+* @param i index of the killer submarine to move in the killer submarine position array
 */
 function attemptMoveKillSub(i) {
-    killerSub = killerSubs[i]
+    var killerSub = killerSubs[i]
     // Retrive co-ordinates of the killer submarine
-    x = killerSub[0]
-    y = killerSub[1]
+    var x = killerSub[0]
+    var y = killerSub[1]
     // Try to move to a cell containing the user's submarine
     if (moveNearUserSub(x, y, i)) {
     }
     // Try to move to a cell containing fuel
     else if (moveNearFuel(x, y, i)) {
     }
-    else if (!trapped(x, y)) {
-        // Move to an arbitrary cell 
+    // Move to an arbitrary cell if the killer submarine isn't trapped
+    else if (!trapped(x, y) && userSubExists) {
+        // Keep generating a direction until the killer sub can move to an unoccuppied cell
         do {
-            // Array of directions to move a killer sub
-            randDirections = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]
             // Get a random index
-            index = Math.round(Math.random() * 7)
+            var index = Math.round(Math.random() * 7)
             console.log(index)
-            randDirection = randDirections[index]
-            // Co-ordinates to move killer sub into
-            newX = x + randDirection[0]
-            newY = y + randDirection[1]
-            if (!outsideGrid(newX, newY) && hitsKillerSub(newX, newY)) {
-                console.log("hits")
-            }
+            var randDirection = directions[index]
+            // Co-ordinates of cell to move killer sub into
+            var newX = x + randDirection[0]
+            var newY = y + randDirection[1]
+            // Check if the cell is empty
             if (!outsideGrid(newX, newY) && !hitsObstacle(newX, newY) && !hitsKillerSub(newX, newY)) {
                 moveKillerSub(newX, newY, i)
+                break
             }
-        } while (outsideGrid(newX, newY) || hitsObstacle(newX, newY))
+        } while (outsideGrid(newX, newY) || hitsObstacle(newX, newY) || hitsKillerSub(newX, newY))
     }
     if (totalKillers == 0 || totalFuels == 0 || !userSubExists) {
         endGame()
@@ -479,11 +532,12 @@ function attemptMoveKillSub(i) {
 
 // Play stage of the game
 function play() {
+    // First check if the users submarine has enough fuel
     if (subFuel != 0) {
         // Keep prompting the user for input until they supply a valid direction key to move the users submarine
         do {
-            direction = prompt("Enter a direction (W,A,D,X) to move your submarine")
-            // If cancel button clicked on the prompt -> break out of loop prompting the user for input
+            var direction = prompt("Enter a direction (W,A,D,X) to move your submarine")
+            // If cancel button clicked on the prompt -> break out of loop
             if (direction === null) {
                 break
             }
@@ -514,39 +568,7 @@ function play() {
     }
 }
 
-// End stage of the game
-function endGame() {
-    gameStage = "end"
-    gameStageHeader = document.getElementById("gameStageHeader")
-    gameStageHeader.innerHTML = "Game Over!"
 
-    startButton = document.getElementById("startBtn")
-    startButton.style.visibility = "hidden"
-
-    moveButton = document.getElementById("moveBtn")
-    moveButton.style.visibility = "hidden"
-
-    endButton = document.getElementById("endBtn")
-    endButton.style.visibility = "hidden"
-    clearMessage("txtAboveGrid")
-    // Determine winner
-    if ((totalKillers == 0 || totalFuels == 0) && playerScore > computerScore) {
-        showMessage("txtAboveGrid", "User wins!", "GreenFont")
-
-    }
-    else if (!userSubExists || (totalFuels == 0 && computerScore > playerScore)) {
-        showMessage("txtAboveGrid", "Computer wins!", "RedFont")
-    }
-    else {
-        showMessage("txtAboveGrid", "Game is a draw!", "OrangeFont")
-    }
-
-    if (round != 0) {
-        round--
-    }
-    showMessage("results", "Round: " + round + "<br> Submarine fuel: " + subFuel + "<br> User score: " + playerScore + "<br> Computer score: " + computerScore, "BlackFont")
-
-}
 
 /**
 * Event listener function for when the user clicks on a cell on the table
@@ -590,5 +612,6 @@ function initTable(table) {
     }
 }
 initTable(table)
-document.getElementById("moveBtn").style.visibility = "hidden";
-document.getElementById("endBtn").style.visibility = "hidden";
+moveButton.style.visibility = "hidden";
+endButton.style.visibility = "hidden";
+restartBtn.style.visibility = "hidden"
